@@ -76,8 +76,6 @@ class GoogleMerchantAccount(models.Model):
             else:
                 raise ValueError("There aren't any products that are suitable to upload")
 
-
-
         def update_inventory(self):
             pass
 
@@ -92,7 +90,7 @@ class GoogleCategory(models.Model):
 
 
 class GoogleProduct(models.Model):
-    product = models.ForeignKey(Product)
+    product = models.ForeignKey('GoogleProductDetails')
 
     product_upc = models.CharField(max_length=32,blank=True,null=True,db_index=True)
     google_shopping_id = models.CharField(max_length=128,blank=True,null=True,db_index=True)
@@ -100,3 +98,11 @@ class GoogleProduct(models.Model):
 
     def __unicode__(self):
         return str(self.product.upc) or "" + " - " + self.google_shopping_id or ""
+
+
+class GoogleProductDetails(models.Model):
+    product = models.OneToOneField(Product)
+    google_product = models.OneToOneField(GoogleProduct)
+    publish_google_shopping = models.BooleanField(default=False)
+    google_taxonomy = models.ForeignKey("gmerchant.GoogleCategory",blank=True,null=True)
+    google_shopping_description = models.TextField(null=True, blank=True)

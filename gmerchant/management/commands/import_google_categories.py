@@ -1,4 +1,3 @@
-
 import requests
 
 from django.core.management.base import BaseCommand, CommandError
@@ -6,7 +5,6 @@ from django.core.management.base import BaseCommand, CommandError
 from local_shop.gmerchant.models import GoogleCategory
 
 CATEGORY_SOURCE = "http://www.google.com/basepages/producttype/taxonomy.en-US.txt"
-
 
 class Command(BaseCommand):
     help = 'Fetches the google product category list and stores them in the DB'
@@ -30,6 +28,5 @@ class Command(BaseCommand):
             cat, created = GoogleCategory.objects.get_or_create(source_idx=idx,name=val)
             if created:
                 cat.save()
-
 
 
