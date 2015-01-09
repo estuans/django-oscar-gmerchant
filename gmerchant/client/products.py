@@ -37,8 +37,7 @@ def get_unique_id(gprod):
   return "%s#%d%d" % (PREFIX,int(time.time()), unique_id_increment)
 
 def chunks(l, n):
-    """ Yield successive n-sized chunks from l.
-    """
+    #Yield successive n-sized chunks from l.
     for i in xrange(0, len(l), n):
         yield l[i:i+n]
 
@@ -48,6 +47,7 @@ def warn_exp_token():
 
 
 def resolve_availability(product):
+    # Borrowed from Oscar 0.6~ish
     if product.is_group:
         # If any one of this product's variants is available, then we treat
         # this product as available.
@@ -60,6 +60,7 @@ def resolve_availability(product):
     return product.has_stockrecord and product.stockrecord.is_available_to_buy
 
 def resolve_google_availability(product):
+    # Returns a Google Shopping API compatible availability message.
     if resolve_availability(product):
         return "in stock"
     else:
@@ -124,9 +125,6 @@ class ShoppingClient(object):
             warn_exp_token()
 
     def buildProduct(self,gprod):
-        
-        #GoogleProduct = get_model('gmerchant','GoogleProduct')
-        #gprod, created = GoogleProduct.objects.get_or_create(product_upc=product.upc, product=product)
         product = gprod.product
 
         offer_id = get_unique_id(gprod)
@@ -159,6 +157,7 @@ class ShoppingClient(object):
         return product_data
 
     def insertProduct(self,product):
+        #TODO: Is this even necessary? I mean, who wants to upload just a single product...
         try:
 
             # Dictify the product
