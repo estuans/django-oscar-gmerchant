@@ -50,8 +50,7 @@ class GoogleMerchantAccount(models.Model):
 
         def insert_test(self):
             #This is for testing.
-            p = Product.objects.filter(publish_google_shopping=True,
-                                       title__icontains="Dynamo",
+            p = GoogleProduct.objects.filter(publish_google_shopping=True,
                                        stockrecords__num_in_stock__gte=1)
             if p:
                 self.insert_product(p[0])
@@ -65,9 +64,8 @@ class GoogleMerchantAccount(models.Model):
 
         def upload_catalogue(self):
             self.init_client()
-            import pdb; pdb.set_trace()
             # Grab products that aren't already on Google.
-            p = Product.objects.filter(publish_google_shopping=True,
+            p = GoogleProduct.objects.filter(publish_google_shopping=True,
                                        stockrecords__num_in_stock__gte=1,
                                        googleproduct=None)
                                        
@@ -77,8 +75,13 @@ class GoogleMerchantAccount(models.Model):
                 raise ValueError("There aren't any products that are suitable to upload")
 
         def update_inventory(self):
-            pass
-
+            self.init_client()
+            import pdb; pdb.set_trace()
+            p = GoogleProduct.objects.all().select_related()
+            if len(p) > 0:
+                self.client.batchUpdate(p)
+            else:
+                raise ValueError("There aren't any products that are suitable for updating")
 
 
 class GoogleCategory(models.Model):
@@ -90,19 +93,22 @@ class GoogleCategory(models.Model):
 
 
 class GoogleProduct(models.Model):
-    product = models.ForeignKey('GoogleProductDetails')
+    class Meta:
+        verbose_name = "Google Merchant Records"
+        verbose_name_plural = "Google Merchant Records"
 
-    product_upc = models.CharField(max_length=32,blank=True,null=True,db_index=True)
+    product = models.ForeignKey(Product)
+
+    publish_google_shopping = models.BooleanField(default=False)
+    google_taxonomy = models.ForeignKey("gmerchant.GoogleCategory",blank=True,null=True)
+    google_shopping_description = models.TextField(null=True, blank=True)
+
+    product_upc = models.CharField(max_length=32,blank=True,null=True,db_index=True,editable=False)
     google_shopping_id = models.CharField(max_length=128,blank=True,null=True,db_index=True)
     google_shopping_created = models.DateTimeField(blank=True,null=True)
+    google_shopping_updated = models.DateTimeField(blank=True,null=True)
 
     def __unicode__(self):
         return str(self.product.upc) or "" + " - " + self.google_shopping_id or ""
 
 
-class GoogleProductDetails(models.Model):
-    product = models.OneToOneField(Product)
-    google_product = models.OneToOneField(GoogleProduct)
-    publish_google_shopping = models.BooleanField(default=False)
-    google_taxonomy = models.ForeignKey("gmerchant.GoogleCategory",blank=True,null=True)
-    google_shopping_description = models.TextField(null=True, blank=True)

@@ -1,9 +1,9 @@
-
-import requests
-
 from django.core.management.base import BaseCommand, CommandError
 
 from local_shop.gmerchant.models import GoogleMerchantAccount
+
+class GMAException(CommandError):
+    pass
 
 class Command(BaseCommand):
     help = 'Synchronizes Inventory with Google Shopping.'
@@ -14,5 +14,10 @@ class Command(BaseCommand):
 
     def sync_inventory(self):
         self.gma = gma = GoogleMerchantAccount.objects.first()
-        gma.init_client()
-        gma.update_inventory()
+
+        if not gma:
+            raise GMAException("You must set up a Google Merchant Account in the admin first.")
+
+        else:
+            gma.init_client()
+            gma.update_inventory()

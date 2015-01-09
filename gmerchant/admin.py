@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.conf import settings
-from models import GoogleMerchantAccount, APIServiceCredentials, GoogleCategory, GoogleProduct, GoogleProductDetails
+from models import GoogleMerchantAccount, APIServiceCredentials, GoogleCategory, GoogleProduct
 from oscar.core.loading import get_model, get_class
 
 
@@ -12,11 +12,11 @@ ProductAdmin = get_class("catalogue.admin","ProductAdmin")
 admin.site.unregister(Product)
 
 class GoogleProductDetailsAdmin(admin.StackedInline):
-    model = GoogleProductDetails
+    model = GoogleProduct
     extra = 0
     max_num = 1 #Lazy way to enforce Singleton-like behaviour.
-
-    exclude = ("google_product",)
+    readonly_fields=('google_shopping_created','google_shopping_updated','google_shopping_id',)
+    exclude = ("google_product","product_upc")
 
 class GoogleExtendedProductAdmin(ProductAdmin):
     inlines = ProductAdmin.inlines + [GoogleProductDetailsAdmin,]
@@ -28,7 +28,7 @@ admin.site.register(GoogleMerchantAccount)
 admin.site.register(APIServiceCredentials)
 admin.site.register(GoogleCategory)
 
-# This isn't necessary during normal operations
+# This isn't necessary to seen during normal operations
 if settings.DEBUG:
     admin.site.register(GoogleProduct)
 

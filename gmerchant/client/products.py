@@ -3,6 +3,7 @@ import time
 
 from datetime import datetime
 
+from .conf import *
 from .api import Content
 from apiclient.http import BatchHttpRequest
 from oauth2client import client
@@ -11,13 +12,10 @@ from oscar.core.loading import get_model
 from django.utils.encoding import smart_text
 
 
-
 Product = get_model('catalogue','Product')
 
 unique_id_increment = 0
-MAX_PAGE_SIZE = 50
-BATCH_SIZE = 50
-BRAND = "Protein Dynamix"
+
 
 
 def get_unique_id(gprod):
@@ -49,6 +47,24 @@ def warn_exp_token():
                'application to re-authorize')
 
 
+def resolve_availability(product):
+    if product.is_group:
+        # If any one of this product's variants is available, then we treat
+        # this product as available.
+        for variant in product.variants.select_related('stockrecord').all():
+            if variant.is_available_to_buy:
+                return True
+        return False
+    if not product.get_product_class().track_stock:
+        return True
+    return product.has_stockrecord and product.stockrecord.is_available_to_buy
+
+def resolve_google_availability(product):
+    if resolve_availability(product):
+        return "in stock"
+    else:
+        return "out of stock"
+
 class ShoppingClient(object):
 
     app = None
@@ -68,31 +84,39 @@ class ShoppingClient(object):
             self.service = discovery.build('content', 'v2', http=self.http_auth)
 
 
-    def batchUpdate(self):
+    def batchUpdate(self,gproduct_qset):
+        GoogleProduct = get_model('gmerchant','GoogleProduct')
 
         def product_updated(request_id, unused_response, exception):
           if exception is not None:
             # Do something with the exception.
             print 'There was an error: ' + str(exception)
           else:
+            gp = GoogleProduct.objects.get(google_shopping_id=offer_id)
+            gp.google_shopping_updated = datetime.now()
+            gp.save()
             print 'Request ID: %s - Product was updated.' % (str(request_id),)
 
         merchant_id = self.merchant_id
-        product_ids = flags.product_ids
 
         batch = BatchHttpRequest(callback=product_updated)
 
-        for product_id in product_ids:
-            new_status = {
-                'availability': 'out of stock',
-                'price': {'value': 3.14, 'currency': 'GBP'}}
-
-        # Add product update to the batch.
-        batch.add(service.inventory().set(
-            merchantId=merchant_id,
-            storeCode=product_id.split(':')[0],
-            productId=product_id,
-            body=new_status))
+        for prod in gproduct_qset:
+            with prod.product as product:
+                new_status = {
+                    #Update the price of the item
+                    'price' : {'value': str(product.stockrecords.first().price_incl_tax), 'currency': 'GBP'},
+                    'description': len(product.google_shopping_description) > 0 and bleach.clean(smart_text(product.google_shopping_description),strip=True) or bleach.clean(smart_text(product.parent.google_shopping_description),strip=True),
+                    'link': SITE_ROOT + product.get_absolute_url(),
+                    'imageLink': product.get_first_image_url(),
+                    #Is it in stock?
+                    'availability': resolve_google_availability(product),
+                }
+                # Add product update to the batch.
+                batch.add(self.service.inventory().set(
+                    merchantId=merchant_id,
+                    productId=prod.google_shopping_id,
+                    body=new_status))
         try:
             batch.execute()
 
@@ -109,7 +133,7 @@ class ShoppingClient(object):
                 'offerId': offer_id,
                 'title':  smart_text(product.title),
                 'description': len(product.google_shopping_description) > 0 and bleach.clean(smart_text(product.google_shopping_description),strip=True) or bleach.clean(smart_text(product.parent.google_shopping_description),strip=True),
-                'link': "https://proteindynamix.com" + product.get_absolute_url(),
+                'link': SITE_ROOT + product.get_absolute_url(),
                 'imageLink': product.get_first_image_url(),
                 'brand': BRAND,
                 'contentLanguage': 'en',
