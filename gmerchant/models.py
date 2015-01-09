@@ -65,9 +65,19 @@ class GoogleMerchantAccount(models.Model):
         def upload_catalogue(self):
             self.init_client()
             # Grab products that aren't already on Google.
-            p = GoogleProduct.objects.filter(publish_google_shopping=True,
-                                       stockrecords__num_in_stock__gte=1,
-                                       googleproduct=None)
+            p = GoogleProduct.objects.filter(product__publish_google_shopping=True,
+                                       product__stockrecords__num_in_stock__gte=1).exclude(google_shopping_id!=None)
+                                       
+            if len(p) > 0:
+                self.client.batchInsertProducts(p)
+            else:
+                raise ValueError("There aren't any products that are suitable to upload")
+                
+        def refresh_catalogue(self):
+            self.init_client()
+            # Grab all products that are already on Google.
+            p = GoogleProduct.objects.filter(product__publish_google_shopping=True,
+                                       product__stockrecords__num_in_stock__gte=1).exclude(google_shopping_id=None)
                                        
             if len(p) > 0:
                 self.client.batchInsertProducts(p)
@@ -76,7 +86,6 @@ class GoogleMerchantAccount(models.Model):
 
         def update_inventory(self):
             self.init_client()
-            import pdb; pdb.set_trace()
             p = GoogleProduct.objects.all().select_related()
             if len(p) > 0:
                 self.client.batchUpdate(p)
