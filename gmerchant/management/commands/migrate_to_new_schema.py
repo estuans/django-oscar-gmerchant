@@ -2,7 +2,9 @@ from django.core.management.base import BaseCommand, CommandError
 
 from local_shop.gmerchant.models import GoogleMerchantAccount, GoogleProduct
 
-from oscar.core.loading import
+from oscar.core.loading import get_class, get_model
+
+Product = get_model("catalogue","Product")
 
 class GMerchantMigrationError(CommandError):
     pass
