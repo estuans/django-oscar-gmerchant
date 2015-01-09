@@ -6,7 +6,6 @@ from oscar.core.loading import get_model, get_class
 
 Product = get_model("catalogue","Product")
 ProductAdmin = get_class("catalogue.admin","ProductAdmin")
-
 # First, un-register the Existing Product Admin
 
 admin.site.unregister(Product)
@@ -20,13 +19,21 @@ class GoogleProductDetailsAdmin(admin.StackedInline):
 
 class GoogleExtendedProductAdmin(ProductAdmin):
     inlines = ProductAdmin.inlines + [GoogleProductDetailsAdmin,]
+    
 
 #Now we re-register the Product admin class
 admin.site.register(Product, GoogleExtendedProductAdmin)
 
+
+class GoogleCategoryAdmin(admin.ModelAdmin):
+    search_fields = ['name',]
+    
+
+
+
 admin.site.register(GoogleMerchantAccount)
 admin.site.register(APIServiceCredentials)
-admin.site.register(GoogleCategory)
+admin.site.register(GoogleCategory, GoogleCategoryAdmin)
 
 # This isn't necessary to seen during normal operations
 if settings.DEBUG:

@@ -34,7 +34,7 @@ def get_unique_id(gprod):
   if unique_id_increment is None:
     unique_id_increment = 0
   unique_id_increment += 1
-  return "%d%d" % (int(time.time()), unique_id_increment)
+  return "%s#%d%d" % (PREFIX,int(time.time()), unique_id_increment)
 
 def chunks(l, n):
     """ Yield successive n-sized chunks from l.
@@ -76,7 +76,6 @@ class ShoppingClient(object):
         if not self.app:
             raise AttributeError("You must assign an app to use this.")
         else:
-            #import pdb; pdb.set_trace()
 
             self.merchant_id = self.app.account_id
             content_scheme = Content()
@@ -84,7 +83,7 @@ class ShoppingClient(object):
             self.service = discovery.build('content', 'v2', http=self.http_auth)
 
 
-    def batchUpdate(self,gproduct_qset):
+    def batchUpdateInventory(self,gproduct_qset):
         GoogleProduct = get_model('gmerchant','GoogleProduct')
 
         def product_updated(request_id, unused_response, exception):
@@ -102,46 +101,48 @@ class ShoppingClient(object):
         batch = BatchHttpRequest(callback=product_updated)
 
         for prod in gproduct_qset:
-            with prod.product as product:
-                new_status = {
-                    #Update the price of the item
-                    'price' : {'value': str(product.stockrecords.first().price_incl_tax), 'currency': 'GBP'},
-                    'description': len(product.google_shopping_description) > 0 and bleach.clean(smart_text(product.google_shopping_description),strip=True) or bleach.clean(smart_text(product.parent.google_shopping_description),strip=True),
-                    'link': SITE_ROOT + product.get_absolute_url(),
-                    'imageLink': product.get_first_image_url(),
-                    #Is it in stock?
-                    'availability': resolve_google_availability(product),
-                }
-                # Add product update to the batch.
-                batch.add(self.service.inventory().set(
-                    merchantId=merchant_id,
-                    productId=prod.google_shopping_id,
-                    body=new_status))
+            product = prod.product
+            new_status = {
+                #Update the price of the item
+                'price' : {'value': str(product.stockrecords.first().price_incl_tax), 'currency': 'GBP'},
+                'description': len(product.google_shopping_description) > 0 and bleach.clean(smart_text(product.google_shopping_description),strip=True) or bleach.clean(smart_text(product.parent.google_shopping_description),strip=True),
+                'link': SITE_ROOT + product.get_absolute_url(),
+                'imageLink': product.get_first_image_url(),
+                #Is it in stock?
+                'availability': resolve_google_availability(product),
+            }
+            # Add product update to the batch.
+            batch.add(self.service.inventory().set(
+                merchantId=merchant_id,
+                productId=prod.google_shopping_id,
+                
+                body=new_status))
         try:
             batch.execute()
 
         except client.AccessTokenRefreshError:
             warn_exp_token()
 
-    def buildProduct(self,product):
-        GoogleProduct = get_model('gmerchant','GoogleProduct')
+    def buildProduct(self,gprod):
         
-        gprod, created = GoogleProduct.objects.get_or_create(product_upc=product.upc, product=product)
+        #GoogleProduct = get_model('gmerchant','GoogleProduct')
+        #gprod, created = GoogleProduct.objects.get_or_create(product_upc=product.upc, product=product)
+        product = gprod.product
 
-        offer_id = 'prod#%s' % get_unique_id(gprod)
+        offer_id = get_unique_id(gprod)
         product_data = {
                 'offerId': offer_id,
                 'title':  smart_text(product.title),
-                'description': len(product.google_shopping_description) > 0 and bleach.clean(smart_text(product.google_shopping_description),strip=True) or bleach.clean(smart_text(product.parent.google_shopping_description),strip=True),
+                'description': len(gprod.google_shopping_description) > 0 and bleach.clean(smart_text(gprod.google_shopping_description),strip=True) or bleach.clean(smart_text(gprod.parent.google_shopping_description),strip=True),
                 'link': SITE_ROOT + product.get_absolute_url(),
                 'imageLink': product.get_first_image_url(),
                 'brand': BRAND,
                 'contentLanguage': 'en',
                 'targetCountry': 'UK',
                 'channel': 'online',
-                'availability': 'in stock',
+                'availability': resolve_google_availability(product),
                 'condition': 'new',
-                'googleProductCategory': product.google_taxonomy.name or 'Health & Beauty > Health Care > Fitness & Nutrition',
+                'googleProductCategory': smart_text(gprod.google_taxonomy.name),
                 'mpn': product.upc,
                 'price': {'value': str(product.stockrecords.first().price_incl_tax), 'currency': 'GBP'},
                 'shipping': [{
@@ -189,7 +190,10 @@ class ShoppingClient(object):
             offer_id = smart_text(response['offerId'].encode('ascii', 'ignore'))
 
             gp = GoogleProduct.objects.get(google_shopping_id=offer_id)
-            gp.google_shopping_created = datetime.now()
+            if not gp.google_shopping_created:
+                gp.google_shopping_created = datetime.now()
+            else:
+                gp.google_shopping_updated = datetime.now()
             gp.save()
 
             print ('Product with offerId "%s" and title "%s" was created.' %
@@ -205,7 +209,6 @@ class ShoppingClient(object):
                 batch.add(self.service.products().insert(merchantId=self.merchant_id,
                                                     body=product))
             try:
-                import pdb; pdb.set_trace()
                 #Let's send this batch off to the Goog.
                 batch.execute()
             except client.AccessTokenRefreshError:
