@@ -25,3 +25,11 @@ USAGE
 Contributions welcome.
 
 
+IDEAS / TBD
+===========
+
+* Add post-save signals to Product model save to trigger updates to single product records.
+* Complete integration with "Store Inventory Managment".
+* Add Oscar Dashboard integration.
+* Improve Merchant account handling.
+
