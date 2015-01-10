@@ -65,7 +65,7 @@ class GoogleMerchantAccount(models.Model):
         def upload_catalogue(self):
             self.init_client()
             # Grab products that aren't already on Google.
-            p = GoogleProduct.objects.filter(product__publish_google_shopping=True,
+            p = GoogleProduct.objects.filter(publish_google_shopping=True,
                                        product__stockrecords__num_in_stock__gte=1).exclude(google_shopping_id!=None)
                                        
             if len(p) > 0:
@@ -76,7 +76,7 @@ class GoogleMerchantAccount(models.Model):
         def refresh_catalogue(self):
             self.init_client()
             # Grab all products that are already on Google.
-            p = GoogleProduct.objects.filter(product__publish_google_shopping=True,
+            p = GoogleProduct.objects.filter(publish_google_shopping=True,
                                        product__stockrecords__num_in_stock__gte=1).exclude(google_shopping_id=None)
                                        
             if len(p) > 0:
