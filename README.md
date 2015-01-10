@@ -1,7 +1,7 @@
 django-oscar-gmerchant
 ======================
 
-Integration with Google Merchant Center and Django Oscar
+Integration with Google Merchant Center and Django Oscar using the v2 Shopping API
 
 THIS IS STILL AS WORK IN PROGRESS.
 
@@ -33,3 +33,7 @@ IDEAS / TBD
 * Add Oscar Dashboard integration.
 * Improve Merchant account handling.
 
+Acknowledgments
+===============
+
+This project borrows heavily from the sample code supplied by [Google](https://github.com/googleads/googleads-shopping-samples/tree/master/python)
