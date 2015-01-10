@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Django-oscar-gmerchant : Integration with Google Merchant Center and Django Oscar">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Django-oscar-gmerchant</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/estuans/django-oscar-gmerchant">View on GitHub</a>
+
+          <h1 id="project_title">Django-oscar-gmerchant</h1>
+          <h2 id="project_tagline">Integration with Google Merchant Center and Django Oscar</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/estuans/django-oscar-gmerchant/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/estuans/django-oscar-gmerchant/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a id="django-oscar-gmerchant" class="anchor" href="#django-oscar-gmerchant" aria-hidden="true"><span class="octicon octicon-link"></span></a>django-oscar-gmerchant</h1>
+
+<p>Integration with Google Merchant Center and Django Oscar using the v2 Shopping API</p>
+
+<p>THIS IS STILL AS WORK IN PROGRESS. HEREBEDRAGONS. COUNT YOURSELF WARNED.</p>
+
+<p>It <em>should</em> however be fairly straight forward to use.
+Simply add to your post-oscar applications list and you should be on your way.</p>
+
+<p>If you receive warnings about the ProductAdminClass, then you should look at changing
+the ProductAdmin that is being modified inside of gmerchant/admin to point directly at
+your-likely-to-have-been modified class.</p>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<ol>
+<li>Install.</li>
+<li>Run import_google_categories.</li>
+<li>Add a Google Merchant account to your admin.</li>
+<li>Add Google Merchant Records to the products you wish publish.</li>
+<li>Run upload_catalogue using a cronjob.</li>
+<li>Profit (optional!)</li>
+</ol>
+
+<h2>
+<a id="ideas--to-dos" class="anchor" href="#ideas--to-dos" aria-hidden="true"><span class="octicon octicon-link"></span></a>Ideas / To Do's</h2>
+
+<ul>
+<li>Add post-save signals to Product model save to trigger updates to single product records.</li>
+<li>Complete integration with "Store Inventory Managment".</li>
+<li>Add Oscar Dashboard integration.</li>
+<li>Improve Merchant account handling.</li>
+<li><strong>Add Tests</strong></li>
+<li>Write some real documentation.</li>
+<li>Package it up for PyPi.</li>
+</ul>
+
+<p>Contributions welcome.</p>
+
+<h2>
+<a id="support" class="anchor" href="#support" aria-hidden="true"><span class="octicon octicon-link"></span></a>Support</h2>
+
+<p>If you are having trouble using this module, don't hesitate to add an issue or send me an <a href="mailto:ben@n0ware.co.uk">email</a></p>
+
+<h2>
+<a id="acknowledgments" class="anchor" href="#acknowledgments" aria-hidden="true"><span class="octicon octicon-link"></span></a>Acknowledgments</h2>
+
+<p>This project borrows heavily from the sample code supplied by <a href="https://github.com/googleads/googleads-shopping-samples/tree/master/python">Google</a></p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Django-oscar-gmerchant maintained by <a href="https://github.com/estuans">estuans</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
